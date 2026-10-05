@@ -11,6 +11,10 @@ let package = Package(
             name: "EngineeringKit",
             targets: ["EngineeringKit"]
         ),
+        .executable(
+            name: "EngineeringKitDemo",
+            targets: ["EngineeringKitDemo"]
+        )
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.
@@ -20,6 +24,10 @@ let package = Package(
             swiftSettings: [
                 .enableUpcomingFeature("ApproachableConcurrency"),
             ],
+        ),
+        .executableTarget(
+            name: "EngineeringKitDemo",
+            dependencies: ["EngineeringKit"]
         ),
         .testTarget(
             name: "EngineeringKitTests",
