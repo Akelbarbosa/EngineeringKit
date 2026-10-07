@@ -29,3 +29,7 @@ let moment = force1 * distance
 
 print("Lever arm:", distance.value(in: .millimeter), "mm")
 print("Moment:", moment.value(in: .kilonewtonMeter), "kN·m")
+
+// Density shorthand converts grams per cubic centimeter to its SI representation.
+let density = 1.gPerCubicCentimeter
+print("Density:", density.value(in: .kilogramPerCubicMeter), "kg/m³")

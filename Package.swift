@@ -1,4 +1,11 @@
 // swift-tools-version: 6.4
+//
+//  Package.swift
+//  EngineeringKit
+//
+//  Created by Akel barbosa on 7/10/26.
+//
+
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription

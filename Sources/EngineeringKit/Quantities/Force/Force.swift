@@ -76,17 +76,3 @@ public struct Force: Sendable, Equatable, Comparable {
         )
     }
 }
-
-extension Force {
-    /// Computes torque using a signed perpendicular lever arm.
-    public static func * (lhs: Force, rhs: Length) -> Torque {
-        Torque(value: lhs.value(in: .newton) * rhs.value(in: .meter), unit: .newtonMeter)
-    }
-}
-
-extension Length {
-    /// Computes torque using a signed perpendicular lever arm.
-    public static func * (lhs: Length, rhs: Force) -> Torque {
-        rhs * lhs
-    }
-}
