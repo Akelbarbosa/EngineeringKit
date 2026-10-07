@@ -1,0 +1,58 @@
+name: Swift compatibility
+
+on:
+  push:
+    branches: [main]
+    tags: ['[0-9]*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: swift-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Linux / Swift ${{ matrix.swift }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        swift: ['6.0.0', '6.3.3']
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: swift-actions/setup-swift@7591e4f04c00624cb043783da51a7fd6ee0a6bf6 # v2
+        with:
+          swift-version: ${{ matrix.swift }}
+      - run: swift --version
+      - run: swift build
+      - run: swift test
+      - run: swift run EngineeringKitDemo
+      - run: swift run --package-path Examples/PackageConsumer PackageConsumer
+
+  apple:
+    name: Apple / Xcode ${{ matrix.xcode }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: macos-15
+            xcode: '16.0'
+          - os: macos-26
+            xcode: '26.6'
+    env:
+      DEVELOPER_DIR: /Applications/Xcode_${{ matrix.xcode }}.app/Contents/Developer
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: swift --version
+      - run: swift build
+      - run: swift test
+      - run: swift run EngineeringKitDemo
+      - run: swift run --package-path Examples/PackageConsumer PackageConsumer
+      - run: bash scripts/check-apple.sh
