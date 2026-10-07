@@ -19,15 +19,18 @@ jobs:
     name: Linux / Swift ${{ matrix.swift }}
     runs-on: ubuntu-22.04
     timeout-minutes: 20
+    container:
+      image: ${{ matrix.image }}
     strategy:
       fail-fast: false
       matrix:
-        swift: ['6.0.0', '6.3.3']
+        include:
+          - swift: '6.0.0'
+            image: swift:6.0.0-jammy@sha256:52a19279ed4b545c7b3bb517a4dc688953151e68e040c638aef5f047cd8b51db
+          - swift: '6.3.3'
+            image: swift:6.3.3-jammy@sha256:2f3a1d7bb74da95c4857514589667a58087fdaf34f11e424d47854bebd710cf2
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: swift-actions/setup-swift@7591e4f04c00624cb043783da51a7fd6ee0a6bf6 # v2
-        with:
-          swift-version: ${{ matrix.swift }}
       - run: swift --version
       - run: swift build
       - run: swift test
