@@ -7,9 +7,12 @@
 
 import Foundation
 
-public struct Force: Sendable {
+/// A signed scalar force stored internally in newtons.
+public struct Force: Sendable, Equatable, Comparable {
+    /// The canonical SI value used by conversions and arithmetic.
     private let valueInNewtons: Double
 
+    /// Creates a quantity by converting the supplied unit to SI.
     public init(value: Double, unit: ForceUnit) {
         switch unit {
         case .newton:
@@ -19,7 +22,8 @@ public struct Force: Sendable {
             self.valueInNewtons = value * 1_000
         }
     }
-    
+
+    /// Returns the quantity expressed in the requested unit.
     public func value(in unit: ForceUnit) -> Double {
         switch unit {
         case .newton:
@@ -28,5 +32,61 @@ public struct Force: Sendable {
         case .kilonewton:
             return valueInNewtons / 1_000
         }
+    }
+
+    /// Compares exact SI values; floating-point rounding can affect equality.
+    public static func == (lhs: Force, rhs: Force) -> Bool {
+        lhs.valueInNewtons == rhs.valueInNewtons
+    }
+
+    /// Orders quantities by their signed SI values.
+    public static func < (lhs: Force, rhs: Force) -> Bool {
+        lhs.valueInNewtons < rhs.valueInNewtons
+    }
+
+    /// Adds quantities, allowing different input units.
+    public static func + (lhs: Force, rhs: Force) -> Force {
+        Force(
+            value: lhs.value(in: .newton) + rhs.value(in: .newton),
+            unit: .newton
+        )
+    }
+
+    /// Subtracts quantities, allowing different input units.
+    public static func - (lhs: Force, rhs: Force) -> Force {
+        Force(
+            value: lhs.value(in: .newton) - rhs.value(in: .newton),
+            unit: .newton
+        )
+    }
+
+    /// Scales the quantity by a dimensionless value.
+    public static func * (lhs: Force, rhs: Double) -> Force {
+        Force(
+            value: lhs.value(in: .newton) * rhs,
+            unit: .newton
+        )
+    }
+
+    /// Divides by a scalar, preserving Double behavior for zero divisors.
+    public static func / (lhs: Force, rhs: Double) -> Force {
+        Force(
+            value: lhs.value(in: .newton) / rhs,
+            unit: .newton
+        )
+    }
+}
+
+extension Force {
+    /// Computes torque using a signed perpendicular lever arm.
+    public static func * (lhs: Force, rhs: Length) -> Torque {
+        Torque(value: lhs.value(in: .newton) * rhs.value(in: .meter), unit: .newtonMeter)
+    }
+}
+
+extension Length {
+    /// Computes torque using a signed perpendicular lever arm.
+    public static func * (lhs: Length, rhs: Force) -> Torque {
+        rhs * lhs
     }
 }

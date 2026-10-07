@@ -7,8 +7,11 @@
 
 import Foundation
 
+/// Supported units for expressing force.
 public enum ForceUnit: Sendable {
+    /// SI unit of force (N).
     case newton
+    /// One thousand newtons (kN).
     case kilonewton
 }
 

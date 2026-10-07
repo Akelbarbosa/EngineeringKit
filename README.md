@@ -18,13 +18,40 @@ The goal of EngineeringKit is to provide reusable engineering tools while levera
 ## Example
 
 ```swift
-let force = 10.kilonewtons
-let distance = 2.meters
+let force = 10.knewton
+let distance = 2.meter
 
 let moment = force * distance
+print(moment.value(in: .kilonewtonMeter)) // 20
 ```
 
 The API should make engineering calculations expressive while preventing incompatible quantities from being mixed accidentally.
+
+## Numeric shorthand
+
+Integer and floating-point values support `.newton`, `.knewton`, `.meter`,
+`.millimeter`, `.newtonMeter`, and `.knewtonMeter`. For example:
+
+```swift
+let force = 2.knewton
+let leverArm = 500.millimeter
+let moment = force * leverArm // 1 kN·m
+let fractionalForce = 2.5.knewton
+```
+
+The explicit `init(value:unit:)` API remains available. Numeric shorthand
+converts its input to `Double`, matching the quantities' internal representation.
+
+## Current capabilities
+
+- `Force`: newtons and kilonewtons
+- `Length`: meters and millimeters
+- `Torque`: newton-meters and kilonewton-meters
+- Comparison, addition, subtraction, and scalar arithmetic
+- `Force * Length` and `Length * Force` produce `Torque`
+
+The force–length product assumes a perpendicular lever arm. These quantities
+are signed scalars; the product does not calculate vector direction or angles.
 
 ## Roadmap
 
