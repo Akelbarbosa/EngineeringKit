@@ -15,6 +15,56 @@ The goal of EngineeringKit is to provide reusable engineering tools while levera
 - Well-tested numerical implementations
 - No external dependencies
 
+## Installation
+
+In Xcode, choose **File → Add Package Dependencies**, enter
+`https://github.com/Akelbarbosa/EngineeringKit.git`, and select version `0.1.0`
+or a compatible later version. Add the **EngineeringKit** library product to
+your app target.
+
+For another Swift package, add:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/Akelbarbosa/EngineeringKit.git", from: "0.1.0")
+]
+```
+
+Then include `.product(name: "EngineeringKit", package: "EngineeringKit")` in
+your target dependencies and use `import EngineeringKit`. The library has no
+SwiftUI dependency; it can be called from SwiftUI, UIKit, AppKit, or console code.
+
+## Compatibility
+
+| Component | Declared support | Verification |
+| --- | --- | --- |
+| Compiler | Swift 6.0+ | CI: Swift 6.0.0 and 6.3.3 on Linux; Xcode 16.0 and 26.6 on macOS |
+| macOS | 13+ | Unit tests on CI hosts; SwiftUI compile/link checks targeting macOS 13, arm64 and x86_64 |
+| iOS | 16+ | SwiftUI compile/link checks targeting iOS 16, simulator and device |
+| Linux | Ubuntu 22.04 CI | Build, unit tests, demo, and separate package consumer |
+
+The current workflow is visible in [GitHub Actions](https://github.com/Akelbarbosa/EngineeringKit/actions).
+Apple Swift 6.4 / Xcode 27 is also checked locally during release preparation.
+Deployment targets and compiler versions are independent: using a new compiler
+does not require the newest iOS or macOS. Oldest-OS runtime tests have not been
+performed; compilation checks should not be interpreted as such. Other platforms
+and compilers are not part of the initial verification matrix.
+
+## API conventions
+
+Quantities are immutable, Sendable value types with canonical SI storage. Raw
+quantities accept signed and non-finite scalars, preserving Double arithmetic;
+physical section constructors instead validate dimensions and relationships.
+Exact equality compares stored values; use tolerances for converted results.
+Axes are documented by each geometry model, not encoded in scalar moments.
+`SectionModulus` denotes an elastic property, not volume, and `Density` denotes
+mass per volume, not weight per volume. The original `hello()` scaffold remains
+available for source compatibility and is not part of the calculation API.
+
+The initial release is `0.1.0`. In the 0.x series, breaking changes use a new
+minor version and are recorded in [CHANGELOG.md](CHANGELOG.md); patch versions
+preserve APIs. See [CONTRIBUTING.md](CONTRIBUTING.md) for development and releases.
+
 ## Example
 
 ```swift
@@ -237,11 +287,16 @@ From the repository root, use Swift Package Manager:
 swift build
 swift test
 swift run EngineeringKitDemo
+swift run --package-path Examples/PackageConsumer PackageConsumer
 ```
 
 The demo exercises quantities, mixed units, solid and hollow sections, radii of
 gyration, and parallel-axis moments. Tests cover reference values, geometric
 scaling, symmetry, unit conversions, and invalid dimensions and offsets.
+
+For Apple integration, run `bash scripts/check-apple.sh` with full Xcode selected.
+The SwiftUI example sources in `Examples/SwiftUI` can also be added to a small
+iOS or macOS app that depends on the EngineeringKit package.
 
 ## Project structure
 
@@ -343,7 +398,8 @@ EngineeringKit aims to:
 
 ## Requirements
 
-- Swift 6.4 or later (matching `Package.swift`)
+- Swift 6.0 or later
+- iOS 16+ or macOS 13+ for Apple consumers; the calculation library also targets Linux
 - Foundation
 
 ## License
