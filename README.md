@@ -53,9 +53,12 @@ be mixed freely; internal storage and arithmetic continue to use SI.
 | Quantity | Units | Numeric shorthand |
 | --- | --- | --- |
 | Length | inch, foot, yard | `12.inch`, `1.foot`, `1.yard` |
+| Area | in², ft² | `1.in2`, `1.ft2` |
 | Force | pound-force, kip | `100.lbf`, `2.kip` |
 | Torque | lbf·in, lbf·ft, kip·in, kip·ft | `12.lbfInch`, `1.lbfFoot`, `12.kipInch`, `1.kipFoot` |
 | Mass density | lbm/ft³, lbm/in³ | `1.lbmPerCubicFoot`, `1.lbmPerCubicInch` |
+| Second moment of area | in⁴, ft⁴ | `1.in4`, `1.ft4` |
+| Elastic section modulus | in³, ft³ | `1.in3`, `1.ft3` |
 
 ```swift
 let length = 12.inch
@@ -81,13 +84,92 @@ tolerance when floating-point rounding matters.
 
 - `Force`: N, kN, lbf, and kip
 - `Length`: m, mm, in, ft, and yd
+- `Area`: m², mm², in², and ft²
 - `Torque`: N·m, kN·m, lbf·in, lbf·ft, kip·in, and kip·ft
 - `Density`: kg/m³, g/cm³, lbm/ft³, and lbm/in³
+- `SecondMomentOfArea`: m⁴, mm⁴, in⁴, and ft⁴
+- `SectionModulus`: m³, mm³, in³, and ft³
 - Comparison, addition, subtraction, and scalar arithmetic
+- `Length * Length` produces `Area`; `Area / Length` produces `Length`
+- Solid rectangular sections with typed area, centroid, centroidal second moments, and elastic section moduli
 - `Force * Length` and `Length * Force` produce `Torque`
+- `SecondMomentOfArea / Length` produces `SectionModulus`
+- `SectionModulus * Length` and `Length * SectionModulus` produce `SecondMomentOfArea`
 
 The force–length product assumes a perpendicular lever arm. These quantities
 are signed scalars; the product does not calculate vector direction or angles.
+
+## Second moment of area
+
+`SecondMomentOfArea` represents the area moment of inertia of a plane section
+about a specified axis. Its dimension is length⁴; it is distinct from mass moment
+of inertia. It stores values in m⁴ and supports comparison and scalar arithmetic.
+The caller determines the reference axis, which is not encoded in this scalar
+type. Addition and subtraction require a common reference axis. Geometry models
+such as RectangularSection compute these values about documented axes.
+
+```swift
+let secondMoment = 10.in4
+print(secondMoment.value(in: .millimeterToFourthPower)) // approximately 4162314.256
+let metricSecondMoment = 2_000_000.mm4
+let explicit = SecondMomentOfArea(value: 0.001, unit: .meterToFourthPower)
+```
+
+Both integers and decimals support `.m4`, `.mm4`, `.in4`, and `.ft4`. Conversion
+factors are derived by raising the corresponding length factor to the fourth
+power, following the second-moment units in [NIST SP 811](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication811e2008.pdf).
+Like the other scalar types, this quantity does not enforce physical value ranges
+or encode the axis. Floating-point conversion results should use a tolerance.
+
+## Elastic section modulus
+
+`SectionModulus` represents the elastic section modulus S = I / c, where I is the
+second moment of area and c is the positive distance from that neutral axis to
+the extreme fiber. This follows the [University of Illinois bending reference](https://mechref.engr.illinois.edu/sol/bending.html).
+It stores m³ and remains a separate quantity from volume. Plastic section modulus
+is not modeled by this elastic calculation.
+
+```swift
+let secondMoment = 10.in4
+let extremeFiberDistance = 2.inch
+let modulus = secondMoment / extremeFiberDistance
+print(modulus.value(in: .cubicInch)) // approximately 5
+let recovered = modulus * extremeFiberDistance // approximately 10 in⁴
+let explicit = SectionModulus(value: 40_000, unit: .cubicMillimeter)
+```
+
+Integers and decimals support `.m3`, `.mm3`, `.in3`, and `.ft3`. Cubic-unit
+conversion factors use the cube of the corresponding length factor. The caller
+is responsible for the reference axis, fiber, and physical input ranges. Raw
+operators preserve `Double` behavior, including infinity or NaN on division by
+zero. Adding scalar moduli does not compute the modulus of a combined section.
+
+## Rectangular sections
+
+`RectangularSection` models a solid rectangle, with width b along x and height h
+along y. Its local origin is the lower-left corner, so the centroid is (b/2, h/2).
+The second moments and elastic section moduli use axes passing through that
+centroid: Ix = bh³/12, Iy = hb³/12, Sx = Ix/(h/2), and Sy = Iy/(b/2).
+The centroidal second-moment formulas follow [Engineering Statics](https://engineeringstatics.org/MOI-common-shapes.html).
+
+```swift
+let section = try RectangularSection(width: 2.inch, height: 6.inch)
+print(section.area.value(in: .squareInch)) // approximately 12
+print(section.secondMomentOfAreaX.value(in: .inchToFourthPower)) // approximately 36
+print(section.secondMomentOfAreaY.value(in: .inchToFourthPower)) // approximately 4
+print(section.sectionModulusX.value(in: .cubicInch)) // approximately 12
+print(section.sectionModulusY.value(in: .cubicInch)) // approximately 4
+let mixed = try RectangularSection(width: 2.inch, height: 152.4.millimeter)
+```
+
+The initializer throws `SectionGeometryError.invalidDimension(name:)` for zero,
+negative, or non-finite width or height. This validation belongs to physical
+geometry; raw scalar quantities continue to preserve their existing arithmetic
+behavior. Results use Double, including its numeric range limits.
+
+`Area` supplies `.m2`, `.mm2`, `.in2`, and `.ft2` shorthand for integers and
+decimals. Area conversions square the corresponding length factor. Products of
+scalar lengths produce Area; dividing Area by Length recovers Length.
 
 ## Project structure
 
@@ -100,20 +182,30 @@ Sources/
     Quantities/
       Force/      # Force.swift, ForceUnit.swift, Force+Literals.swift
       Length/     # Length.swift, LengthUnit.swift, Length+Literals.swift
+      Area/       # Area.swift, AreaUnit.swift, Area+Literals.swift
       Torque/     # Torque.swift, TorqueUnit.swift, Torque+Literals.swift
       Density/    # Density.swift, DensityUnit.swift, Density+Literals.swift
-      Operations/ # Relationships such as Force × Length → Torque
+      SecondMomentOfArea/ # Type, fourth-power units, and numeric shorthand
+      SectionModulus/ # Type, cubic units, and numeric shorthand
+      Operations/ # Relationships between quantities
+    Geometry/
+      Sections/   # RectangularSection and SectionGeometryError
   EngineeringKitDemo/
 Tests/
   EngineeringKitTests/
     Quantities/
       Force/
       Length/
+      Area/
       Torque/
       Density/
+      SecondMomentOfArea/
+      SectionModulus/
       Operations/
       QuantityLiteralsTests.swift
       EnglishUnitsTests.swift
+    Geometry/
+      Sections/   # RectangularSectionTests
 ```
 
 New quantities follow this layout. Cross-quantity operators live in
@@ -121,9 +213,9 @@ New quantities follow this layout. Cross-quantity operators live in
 within their own type. Tests follow the same grouping, with a shared suite
 checking numeric shorthand across quantities.
 
-As the roadmap is implemented, `Geometry`, `Materials`, and `Mechanics` will
-be added beside `Quantities`. Geometry and materials use the quantity types;
-mechanics builds on quantities, geometry, and materials. The quantity layer
+`Geometry` sits beside `Quantities` and builds on the quantity types. As the
+roadmap is implemented, `Materials` and `Mechanics` will be added alongside them.
+Mechanics builds on quantities, geometry, and materials. The quantity layer
 must stay independent of those higher-level models and of UI frameworks.
 
 This organization preserves `import EngineeringKit` and all existing quantity
@@ -138,14 +230,15 @@ APIs, including numeric shorthand. It does not require additional Swift targets.
 - [x] Torque
 - [x] Density
 - [x] English engineering units for the implemented quantities
-- [ ] Second moment of area
-- [ ] Section modulus
+- [x] Second moment of area
+- [x] Section modulus
 
 ### 0.2 — Geometry
 
-- Rectangular sections
-- Circular sections
-- Section properties
+- [x] Area quantity and square-unit conversions
+- [x] Solid rectangular sections and centroidal properties
+- [ ] Circular sections
+- [ ] Additional section properties and shapes
 
 ### 0.3 — Materials
 
