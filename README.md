@@ -19,19 +19,21 @@ The goal of EngineeringKit is to provide reusable engineering tools while levera
 
 In Xcode, choose **File → Add Package Dependencies**, enter
 `https://github.com/Akelbarbosa/EngineeringKit.git`, and select version `0.1.0`
-or a compatible later version. Add the **EngineeringKit** library product to
-your app target.
+with the **Up to Next Minor Version** rule (below `0.2.0`). Add the
+**EngineeringKit** library product to your app target.
 
 For another Swift package, add:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/Akelbarbosa/EngineeringKit.git", from: "0.1.0")
+    .package(url: "https://github.com/Akelbarbosa/EngineeringKit.git", "0.1.0"..<"0.2.0")
 ]
 ```
 
 Then include `.product(name: "EngineeringKit", package: "EngineeringKit")` in
-your target dependencies and use `import EngineeringKit`. The library has no
+your target dependencies and use `import EngineeringKit`. Restricting the range
+to the 0.1 series avoids automatically adopting breaking changes during 0.x.
+The library has no
 SwiftUI dependency; it can be called from SwiftUI, UIKit, AppKit, or console code.
 
 ## Compatibility
