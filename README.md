@@ -91,7 +91,8 @@ tolerance when floating-point rounding matters.
 - `SectionModulus`: m³, mm³, in³, and ft³
 - Comparison, addition, subtraction, and scalar arithmetic
 - `Length * Length` produces `Area`; `Area / Length` produces `Length`
-- Solid rectangular sections with typed area, centroid, centroidal second moments, and elastic section moduli
+- Solid and hollow rectangular/circular sections with typed area, centroid, second moments, and elastic section moduli
+- Shared `PlaneSection` interface with polar area moment, radii of gyration, and parallel-axis calculations
 - `Force * Length` and `Length * Force` produce `Torque`
 - `SecondMomentOfArea / Length` produces `SectionModulus`
 - `SectionModulus * Length` and `Length * SectionModulus` produce `SecondMomentOfArea`
@@ -171,6 +172,77 @@ behavior. Results use Double, including its numeric range limits.
 decimals. Area conversions square the corresponding length factor. Products of
 scalar lengths produce Area; dividing Area by Length recovers Length.
 
+## Circular and hollow sections
+
+Geometry includes `CircularSection(diameter:)`,
+`HollowCircularSection(outerDiameter:innerDiameter:)`, and
+`HollowRectangularSection(width:height:wallThickness:)`. All four section types
+conform to `PlaneSection`. Their origin is the lower-left corner of the outer
+bounding rectangle; x is horizontal and y is vertical. A hollow section has a
+concentric opening. Rectangular tubes have uniform walls and sharp corners;
+catalog sections with rounded corners need a different model.
+
+```swift
+let circle = try CircularSection(diameter: 2.inch)
+let pipe = try HollowCircularSection(outerDiameter: 4.inch, innerDiameter: 50.8.millimeter)
+let tube = try HollowRectangularSection(width: 8.inch, height: 6.inch, wallThickness: 1.inch)
+print(pipe.area.value(in: .squareInch)) // approximately 3π
+print(tube.secondMomentOfAreaX.value(in: .inchToFourthPower)) // approximately 112
+print(circle.radiusOfGyrationX.value(in: .inch)) // approximately 0.5
+```
+
+For a solid circle, A = πd²/4 and Ix = Iy = πd⁴/64. For a circular tube,
+A = π(D²-d²)/4 and Ix = Iy = π(D⁴-d⁴)/64. Hollow rectangular properties
+subtract the concentric opening: A = bh-bi×hi, Ix = (bh³-bi×hi³)/12,
+and Iy = (hb³-hi×bi³)/12, with bi = b-2t and hi = h-2t. The code factors
+these differences to reduce cancellation for thin walls. Elastic section moduli
+use the **outer** extreme-fiber distance. The circular formulas and subtractive
+construction follow [Engineering Statics](https://engineeringstatics.org/parallel-axis-theorem-section.html).
+
+Dimensions must be positive and finite. Inner diameter must be smaller than
+outer diameter; rectangular thickness must leave a positive, representable
+opening in both directions. Invalid relationships throw
+`invalidDiameterRelationship` or `invalidWallThickness`. Use a solid section
+instead of a tube with zero inner diameter. Calculations retain Double's range
+and precision limits, including potential underflow or overflow at extreme sizes.
+
+## Common section properties
+
+`PlaneSection` supplies centroidal `polarMomentOfArea` (J = Ix + Iy),
+`radiusOfGyrationX`, and `radiusOfGyrationY` (k = √(I/A)). The polar moment
+is a geometric property; it is **not** the Saint-Venant torsion constant of a
+general cross-section. Radius formulas follow
+[Engineering Statics](https://engineeringstatics.org/radius-of-gyration-sec.html).
+
+```swift
+let rectangle = try RectangularSection(width: 2.inch, height: 6.inch)
+let atBase = try rectangle.secondMomentOfAreaX(offsetY: (-3).inch)
+let atLeftEdge = try rectangle.secondMomentOfAreaY(offsetX: (-1).inch)
+print(atBase.value(in: .inchToFourthPower)) // approximately 144
+print(atLeftEdge.value(in: .inchToFourthPower)) // approximately 16
+```
+
+These methods use the [parallel-axis theorem](https://engineeringstatics.org/parallel-axis-theorem-section.html),
+I = Icentroid + A×offset². Offsets are measured **from the centroidal axis**,
+not from the local origin: x-axis displacement is along y, and y-axis displacement
+is along x. Zero and negative offsets are valid; non-finite offsets throw
+`SectionGeometryError.nonFiniteOffset(name:)`. Shifted moments do not change the
+centroidal elastic section modulus or radii of gyration.
+
+## Build and validation
+
+From the repository root, use Swift Package Manager:
+
+```sh
+swift build
+swift test
+swift run EngineeringKitDemo
+```
+
+The demo exercises quantities, mixed units, solid and hollow sections, radii of
+gyration, and parallel-axis moments. Tests cover reference values, geometric
+scaling, symmetry, unit conversions, and invalid dimensions and offsets.
+
 ## Project structure
 
 EngineeringKit exposes one library module. Each physical quantity keeps its
@@ -189,7 +261,7 @@ Sources/
       SectionModulus/ # Type, cubic units, and numeric shorthand
       Operations/ # Relationships between quantities
     Geometry/
-      Sections/   # RectangularSection and SectionGeometryError
+      Sections/   # PlaneSection, solid/hollow sections, and geometry errors
   EngineeringKitDemo/
 Tests/
   EngineeringKitTests/
@@ -205,7 +277,7 @@ Tests/
       QuantityLiteralsTests.swift
       EnglishUnitsTests.swift
     Geometry/
-      Sections/   # RectangularSectionTests
+      Sections/   # Shape and shared section-property tests
 ```
 
 New quantities follow this layout. Cross-quantity operators live in
@@ -237,8 +309,13 @@ APIs, including numeric shorthand. It does not require additional Swift targets.
 
 - [x] Area quantity and square-unit conversions
 - [x] Solid rectangular sections and centroidal properties
-- [ ] Circular sections
-- [ ] Additional section properties and shapes
+- [x] Solid circular sections
+- [x] Hollow circular and rectangular sections
+- [x] Shared section interface, polar area moment, and radii of gyration
+- [x] Parallel-axis moments and geometry validation
+
+This completes the initial geometry milestone. Composite sections, rotations,
+plastic properties, and catalog profiles remain possible future extensions.
 
 ### 0.3 — Materials
 
@@ -266,7 +343,7 @@ EngineeringKit aims to:
 
 ## Requirements
 
-- Swift 6+
+- Swift 6.4 or later (matching `Package.swift`)
 - Foundation
 
 ## License

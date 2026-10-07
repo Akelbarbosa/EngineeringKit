@@ -9,7 +9,7 @@
 ///
 /// The local origin is the lower-left corner. Second moments and elastic section
 /// moduli use the horizontal x and vertical y axes through the centroid.
-public struct RectangularSection: Sendable, Equatable {
+public struct RectangularSection: PlaneSection, Equatable {
     /// The positive horizontal dimension b, measured along x.
     public let width: Length
 

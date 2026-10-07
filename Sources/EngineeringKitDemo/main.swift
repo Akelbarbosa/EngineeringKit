@@ -59,3 +59,17 @@ print("Rectangle Ix:", rectangle.secondMomentOfAreaX.value(in: .inchToFourthPowe
 print("Rectangle Iy:", rectangle.secondMomentOfAreaY.value(in: .inchToFourthPower), "in⁴")
 print("Rectangle Sx:", rectangle.sectionModulusX.value(in: .cubicInch), "in³")
 print("Rectangle Sy:", rectangle.sectionModulusY.value(in: .cubicInch), "in³")
+
+// Circular and hollow sections share centroidal properties through PlaneSection.
+let circle = try CircularSection(diameter: 2.inch)
+let circularTube = try HollowCircularSection(outerDiameter: 4.inch, innerDiameter: 2.inch)
+let rectangularTube = try HollowRectangularSection(width: 8.inch, height: 6.inch, wallThickness: 1.inch)
+print("Circle area:", circle.area.value(in: .squareInch), "in²")
+print("Circular tube Ix:", circularTube.secondMomentOfAreaX.value(in: .inchToFourthPower), "in⁴")
+print("Rectangular tube Ix:", rectangularTube.secondMomentOfAreaX.value(in: .inchToFourthPower), "in⁴")
+
+// Gyration and parallel-axis calculations retain typed lengths and moments.
+print("Rectangle kx:", rectangle.radiusOfGyrationX.value(in: .inch), "in")
+print("Rectangle polar moment:", rectangle.polarMomentOfArea.value(in: .inchToFourthPower), "in⁴")
+let baseMoment = try rectangle.secondMomentOfAreaX(offsetY: rectangle.centroidY * -1)
+print("Rectangle moment about its base:", baseMoment.value(in: .inchToFourthPower), "in⁴")
