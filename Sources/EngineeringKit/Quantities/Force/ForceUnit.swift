@@ -13,5 +13,22 @@ public enum ForceUnit: Sendable {
     case newton
     /// One thousand newtons (kN).
     case kilonewton
-}
+    /// Pound-force (lbf), defined using standard gravity.
+    case poundForce
+    /// One thousand pounds-force (kip).
+    case kip
 
+    /// Multiplier from this unit to the canonical SI unit (NIST SP 811).
+    internal var siConversionFactor: Double {
+        switch self {
+        case .newton:
+            return 1
+        case .kilonewton:
+            return 1_000
+        case .poundForce:
+            return 4.448_221_615_260_5
+        case .kip:
+            return 1_000 * ForceUnit.poundForce.siConversionFactor
+        }
+    }
+}

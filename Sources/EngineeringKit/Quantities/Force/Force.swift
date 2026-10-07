@@ -14,24 +14,12 @@ public struct Force: Sendable, Equatable, Comparable {
 
     /// Creates a quantity by converting the supplied unit to SI.
     public init(value: Double, unit: ForceUnit) {
-        switch unit {
-        case .newton:
-            self.valueInNewtons = value
-
-        case .kilonewton:
-            self.valueInNewtons = value * 1_000
-        }
+        self.valueInNewtons = value * unit.siConversionFactor
     }
 
     /// Returns the quantity expressed in the requested unit.
     public func value(in unit: ForceUnit) -> Double {
-        switch unit {
-        case .newton:
-            return valueInNewtons
-
-        case .kilonewton:
-            return valueInNewtons / 1_000
-        }
+        return valueInNewtons / unit.siConversionFactor
     }
 
     /// Compares exact SI values; floating-point rounding can affect equality.

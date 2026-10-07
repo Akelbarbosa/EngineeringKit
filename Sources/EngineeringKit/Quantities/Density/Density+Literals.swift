@@ -16,6 +16,15 @@ public extension BinaryInteger {
     var gPerCubicCentimeter: Density {
         Density(value: Double(self), unit: .gramPerCubicCentimeter)
     }
+    /// Interprets this value as pounds-mass per cubic foot (lbm/ft³).
+    var lbmPerCubicFoot: Density {
+        Density(value: Double(self), unit: .poundMassPerCubicFoot)
+    }
+
+    /// Interprets this value as pounds-mass per cubic inch (lbm/in³).
+    var lbmPerCubicInch: Density {
+        Density(value: Double(self), unit: .poundMassPerCubicInch)
+    }
 }
 
 /// Constructs density quantities from floating-point values.
@@ -28,5 +37,14 @@ public extension BinaryFloatingPoint {
     /// Interprets this value as grams per cubic centimeter (g/cm³).
     var gPerCubicCentimeter: Density {
         Density(value: Double(self), unit: .gramPerCubicCentimeter)
+    }
+    /// Interprets this value as pounds-mass per cubic foot (lbm/ft³).
+    var lbmPerCubicFoot: Density {
+        Density(value: Double(self), unit: .poundMassPerCubicFoot)
+    }
+
+    /// Interprets this value as pounds-mass per cubic inch (lbm/in³).
+    var lbmPerCubicInch: Density {
+        Density(value: Double(self), unit: .poundMassPerCubicInch)
     }
 }

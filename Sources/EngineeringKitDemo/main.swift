@@ -33,3 +33,11 @@ print("Moment:", moment.value(in: .kilonewtonMeter), "kN·m")
 // Density shorthand converts grams per cubic centimeter to its SI representation.
 let density = 1.gPerCubicCentimeter
 print("Density:", density.value(in: .kilogramPerCubicMeter), "kg/m³")
+
+// International inch-pound inputs can be mixed with SI quantities.
+let englishArm = 12.inch
+let englishForce = 2.kip
+let englishMoment = englishForce * englishArm
+print("English lever arm:", englishArm.value(in: .millimeter), "mm")
+print("English moment:", englishMoment.value(in: .kipFoot), "kip·ft")
+print("Mass density:", 1.lbmPerCubicFoot.value(in: .kilogramPerCubicMeter), "kg/m³")

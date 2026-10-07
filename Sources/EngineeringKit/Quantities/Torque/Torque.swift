@@ -12,22 +12,12 @@ public struct Torque: Sendable, Equatable, Comparable {
 
     /// Creates a quantity by converting the supplied unit to SI.
     public init(value: Double, unit: TorqueUnit) {
-        switch unit {
-        case .newtonMeter:
-            self.valueInNewtonMeters = value
-        case .kilonewtonMeter:
-            self.valueInNewtonMeters = value * 1_000
-        }
+        self.valueInNewtonMeters = value * unit.siConversionFactor
     }
 
     /// Returns the quantity expressed in the requested unit.
     public func value(in unit: TorqueUnit) -> Double {
-        switch unit {
-        case .newtonMeter:
-            return valueInNewtonMeters
-        case .kilonewtonMeter:
-            return valueInNewtonMeters / 1_000
-        }
+        return valueInNewtonMeters / unit.siConversionFactor
     }
 
     /// Orders quantities by their signed SI values.

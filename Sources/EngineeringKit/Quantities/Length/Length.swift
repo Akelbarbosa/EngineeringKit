@@ -14,22 +14,12 @@ public struct Length: Sendable, Equatable, Comparable {
 
     /// Creates a quantity by converting the supplied unit to SI.
     public init(value: Double, unit: LengthUnit) {
-        switch unit {
-        case .meter:
-            self.valueInMeters = value
-        case .millimeter:
-            self.valueInMeters = value * 0.001
-        }
+        self.valueInMeters = value * unit.siConversionFactor
     }
 
     /// Returns the quantity expressed in the requested unit.
     public func value(in unit: LengthUnit) -> Double {
-        switch unit {
-        case .meter:
-            return valueInMeters
-        case .millimeter:
-            return valueInMeters / 0.001
-        }
+        return valueInMeters / unit.siConversionFactor
     }
 
     /// Orders quantities by their signed SI values.

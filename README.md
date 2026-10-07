@@ -45,12 +45,44 @@ print(density.value(in: .kilogramPerCubicMeter)) // 1000
 The explicit `init(value:unit:)` API remains available. Numeric shorthand
 converts its input to `Double`, matching the quantities' internal representation.
 
+## English engineering units
+
+The quantities support international inch-pound units alongside SI. Inputs can
+be mixed freely; internal storage and arithmetic continue to use SI.
+
+| Quantity | Units | Numeric shorthand |
+| --- | --- | --- |
+| Length | inch, foot, yard | `12.inch`, `1.foot`, `1.yard` |
+| Force | pound-force, kip | `100.lbf`, `2.kip` |
+| Torque | lbf·in, lbf·ft, kip·in, kip·ft | `12.lbfInch`, `1.lbfFoot`, `12.kipInch`, `1.kipFoot` |
+| Mass density | lbm/ft³, lbm/in³ | `1.lbmPerCubicFoot`, `1.lbmPerCubicInch` |
+
+```swift
+let length = 12.inch
+print(length.value(in: .millimeter)) // approximately 304.8
+let moment = 2.kip * length
+print(moment.value(in: .kipFoot)) // approximately 2
+let mixedMoment = 100.lbf * 0.5.meter
+```
+
+`lbf` means pound-force and `lbm` means pound-mass. `Density` represents mass
+per volume, not weight per volume. The foot is the international foot, not the
+U.S. survey foot. These inch-pound units are shared by U.S. customary and British
+imperial engineering usage; volume measures such as gallons are not implemented.
+
+Conversion definitions follow [NIST SP 811, Appendix B](https://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication811e2008.pdf):
+1 inch = 0.0254 m, 1 foot = 0.3048 m, 1 yard = 0.9144 m,
+1 avoirdupois pound = 0.45359237 kg, and 1 lbf = 4.4482216152605 N.
+Torque and density factors are derived from these definitions rather than rounded
+tables. Calculations use `Double`; compare converted results with an appropriate
+tolerance when floating-point rounding matters.
+
 ## Current capabilities
 
-- `Force`: newtons and kilonewtons
-- `Length`: meters and millimeters
-- `Torque`: newton-meters and kilonewton-meters
-- `Density`: kilograms per cubic meter and grams per cubic centimeter
+- `Force`: N, kN, lbf, and kip
+- `Length`: m, mm, in, ft, and yd
+- `Torque`: N·m, kN·m, lbf·in, lbf·ft, kip·in, and kip·ft
+- `Density`: kg/m³, g/cm³, lbm/ft³, and lbm/in³
 - Comparison, addition, subtraction, and scalar arithmetic
 - `Force * Length` and `Length * Force` produce `Torque`
 
@@ -81,6 +113,7 @@ Tests/
       Density/
       Operations/
       QuantityLiteralsTests.swift
+      EnglishUnitsTests.swift
 ```
 
 New quantities follow this layout. Cross-quantity operators live in
@@ -104,6 +137,7 @@ APIs, including numeric shorthand. It does not require additional Swift targets.
 - [x] Length
 - [x] Torque
 - [x] Density
+- [x] English engineering units for the implemented quantities
 - [ ] Second moment of area
 - [ ] Section modulus
 

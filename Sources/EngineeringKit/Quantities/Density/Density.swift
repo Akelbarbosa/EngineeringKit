@@ -16,22 +16,12 @@ public struct Density: Sendable, Equatable, Comparable {
 
     /// Creates a quantity by converting the supplied unit to SI.
     public init(value: Double, unit: DensityUnit) {
-        switch unit {
-        case .kilogramPerCubicMeter:
-            self.valueInKilogramsPerCubicMeter = value
-        case .gramPerCubicCentimeter:
-            self.valueInKilogramsPerCubicMeter = value * 1_000
-        }
+        self.valueInKilogramsPerCubicMeter = value * unit.siConversionFactor
     }
 
     /// Returns the quantity expressed in the requested unit.
     public func value(in unit: DensityUnit) -> Double {
-        switch unit {
-        case .kilogramPerCubicMeter:
-            return valueInKilogramsPerCubicMeter
-        case .gramPerCubicCentimeter:
-            return valueInKilogramsPerCubicMeter / 1_000
-        }
+        return valueInKilogramsPerCubicMeter / unit.siConversionFactor
     }
 
     /// Orders quantities by their signed SI values.
